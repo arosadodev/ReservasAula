@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservas de aulas</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Gestión de reservas de aulas</h1>
+    <nav aria-label="Secciones">
+      <button class="tab active" data-tab="aulas">Aulas</button>
+      <button class="tab" data-tab="profesores">Profesores</button>
+      <button class="tab" data-tab="franjas">Franjas horarias</button>
+      <button class="tab" data-tab="reservas">Reservas</button>
+    </nav>
+  </header>
+
+  <div id="mensaje" class="mensaje oculto" role="status" aria-live="polite"></div>
+
+  <main>
+    <section id="aulas" class="panel">
+      <div class="barra">
+        <h2>Aulas</h2>
+        <button id="nuevo-aula" class="primario">Nueva aula</button>
+      </div>
+      <form id="filtro-aulas" class="filtros">
+        <label>Capacidad mínima
+          <input type="number" name="capacidad" min="0" placeholder="Ej. 20">
+        </label>
+        <label class="check"><input type="checkbox" name="ordenadores"> Con ordenadores</label>
+        <button type="submit" class="primario">Filtrar</button>
+        <button type="button" id="limpiar-filtro">Limpiar</button>
+      </form>
+      <table>
+        <thead><tr><th>Nombre</th><th>Capacidad</th><th>Ordenadores</th><th></th></tr></thead>
+        <tbody id="tabla-aulas"></tbody>
+      </table>
+    </section>
+
+    <section id="profesores" class="panel oculto">
+      <div class="barra">
+        <h2>Profesores</h2>
+        <button id="nuevo-profesor" class="primario">Nuevo profesor</button>
+      </div>
+      <table>
+        <thead><tr><th>Nombre</th><th>Apellidos</th><th>Email</th><th></th></tr></thead>
+        <tbody id="tabla-profesores"></tbody>
+      </table>
+    </section>
+
+    <section id="franjas" class="panel oculto">
+      <div class="barra">
+        <h2>Franjas horarias</h2>
+        <button id="nueva-franja" class="primario">Nueva franja</button>
+      </div>
+      <table>
+        <thead><tr><th>Hora inicio</th><th>Hora fin</th><th></th></tr></thead>
+        <tbody id="tabla-franjas"></tbody>
+      </table>
+    </section>
+
+    <section id="reservas" class="panel oculto">
+      <div class="barra"><h2>Reservas</h2></div>
+      <form id="form-reserva" class="inline">
+        <h3>Nueva reserva</h3>
+        <label>Aula <select name="aula" required></select></label>
+        <label>Profesor <select name="profesor" required></select></label>
+        <label>Franja horaria <select name="franjaHoraria" required></select></label>
+        <label>Fecha <input type="date" name="fechaReserva" required></label>
+        <button type="submit" class="primario">Reservar</button>
+      </form>
+      <table>
+        <thead><tr><th>Fecha</th><th>Aula</th><th>Profesor</th><th>Franja</th><th></th></tr></thead>
+        <tbody id="tabla-reservas"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <dialog id="dialogo">
+    <form id="form-dialogo" action="javascript:void(0)">
+      <h3 id="dialogo-titulo"></h3>
+      <div id="dialogo-campos"></div>
+      <div class="acciones">
+        <button type="button" id="dialogo-cancelar">Cancelar</button>
+        <button type="submit" class="primario">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

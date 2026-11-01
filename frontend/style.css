@@ -1,0 +1,14 @@
+:root { font-family: Arial, sans-serif; color: #1f2937; background: #f3f4f6; }
+body { margin: 0; }
+.contenedor { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+.tarjeta { background: white; border-radius: 8px; padding: 1.25rem; margin: 1rem 0; box-shadow: 0 2px 8px #0001; }
+.formulario, .formulario-inline { display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; }
+label { display: flex; flex-direction: column; gap: .35rem; font-weight: 600; }
+input, select, button { padding: .55rem; border: 1px solid #9ca3af; border-radius: 4px; font: inherit; }
+button { cursor: pointer; background: #2563eb; color: white; border: 0; }
+button[type="button"] { background: #6b7280; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { text-align: left; padding: .65rem; border-bottom: 1px solid #e5e7eb; }
+.mensaje { min-height: 1.25rem; }
+.mensaje.error { color: #b91c1c; }
+.mensaje.exito { color: #047857; }
