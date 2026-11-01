@@ -1,8 +1,23 @@
 async function peticion(ruta, opciones = {}) {
-  const respuesta = await fetch(API_URL + ruta, {
-    headers: { "Content-Type": "application/json", ...(opciones.headers || {}) },
-    ...opciones,
-  });
+  const configuracion = { ...opciones, headers: { ...(opciones.headers || {}) } };
+
+  // Solo se envía Content-Type cuando existe un cuerpo JSON.
+  // Así las peticiones GET no provocan un preflight CORS innecesario.
+  if (configuracion.body && !configuracion.headers["Content-Type"]) {
+    configuracion.headers["Content-Type"] = "application/json";
+  }
+
+  let respuesta;
+  try {
+    respuesta = await fetch(API_URL + ruta, configuracion);
+  } catch (error) {
+    const excepcion = new Error(
+      "No se puede conectar con el servidor. Comprueba que Spring Boot está iniciado en el puerto 8080."
+    );
+    excepcion.causa = error;
+    throw excepcion;
+  }
+
   if (![200, 201, 204].includes(respuesta.status)) {
     let mensaje = `Error ${respuesta.status}`;
     try {
