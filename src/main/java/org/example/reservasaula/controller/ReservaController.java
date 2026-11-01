@@ -2,6 +2,8 @@ package org.example.reservasaula.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import org.example.reservasaula.dto.DatosReserva;
 import org.example.reservasaula.entity.Aula;
 import org.example.reservasaula.entity.FranjaHoraria;
 import org.example.reservasaula.entity.Profesor;
@@ -55,58 +57,83 @@ public class ReservaController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody ReservaRequest solicitud) {
-        if (!solicitud.valida()) {
+    public ResponseEntity<?> crear(@RequestBody DatosReserva datos) {
+        // Comprueba que la petición contiene todos los datos necesarios.
+        if (!datos.esValida()) {
             return ResponseEntity.badRequest()
                     .body(new RespuestaError("La reserva debe incluir aula, profesor, franja y fecha"));
         }
-        if (solicitud.fechaReserva().isBefore(LocalDate.now())) {
+
+        // Impide crear reservas con una fecha anterior al día actual.
+        if (datos.fechaReserva.isBefore(LocalDate.now())) {
             return ResponseEntity.badRequest()
                     .body(new RespuestaError("No se puede reservar una fecha pasada"));
         }
+
+        // Comprueba que el aula está libre en la fecha y franja solicitadas.
         boolean ocupada = reservaRepository.existsByAulaIdAndFechaReservaAndFranjaHorariaId(
-                solicitud.aula().id(), solicitud.fechaReserva(), solicitud.franjaHoraria().id());
+                datos.getAulaId(), datos.getFechaReserva(), datos.getFranjaHorariaId());
         if (ocupada) {
             return ResponseEntity.status(409)
-                    .body(new RespuestaError("El aula ya esta reservada para esa fecha y franja"));
+                    .body(new RespuestaError("El aula ya está reservada para esa fecha y franja"));
         }
-        Aula aula = aulaRepository.findById(solicitud.aula().id()).orElse(null);
-        Profesor profesor = profesorRepository.findById(solicitud.profesor().id()).orElse(null);
+
+        Aula aula = aulaRepository.findById(datos.getAulaId()).orElse(null);
+        Profesor profesor = profesorRepository.findById(datos.getProfesorId()).orElse(null);
         FranjaHoraria franjaHoraria =
-                franjaHorariaRepository.findById(solicitud.franjaHoraria().id()).orElse(null);
+                franjaHorariaRepository.findById(datos.getFranjaHorariaId()).orElse(null);
         if (aula == null || profesor == null || franjaHoraria == null) {
             return ResponseEntity.status(404)
                     .body(new RespuestaError("El aula, profesor o franja horaria no existe"));
         }
+
         Reserva reserva = Reserva.builder()
                 .aula(aula)
                 .profesor(profesor)
                 .franjaHoraria(franjaHoraria)
-                .fechaReserva(solicitud.fechaReserva())
+                .fechaReserva(datos.getFechaReserva())
                 .build();
         return ResponseEntity.status(201).body(reservaRepository.save(reserva));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody ReservaRequest solicitud) {
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody DatosReserva datos) {
         return reservaRepository.findById(id)
                 .<ResponseEntity<?>>map(actual -> {
-                    if (!solicitud.valida()) {
+                    // Comprueba que la petición contiene todos los datos necesarios.
+                    if (!datos.esValida()) {
                         return ResponseEntity.badRequest()
                                 .body(new RespuestaError("La reserva debe incluir aula, profesor, franja y fecha"));
                     }
-                    Aula aula = aulaRepository.findById(solicitud.aula().id()).orElse(null);
-                    Profesor profesor = profesorRepository.findById(solicitud.profesor().id()).orElse(null);
+
+                    // Impide modificar una reserva para asignarle una fecha ya pasada.
+                    if (datos.getFechaReserva().isBefore(LocalDate.now())) {
+                        return ResponseEntity.badRequest()
+                                .body(new RespuestaError("No se puede reservar una fecha pasada"));
+                    }
+
+                    Aula aula = aulaRepository.findById(datos.getAulaId()).orElse(null);
+                    Profesor profesor = profesorRepository.findById(datos.getProfesorId()).orElse(null);
                     FranjaHoraria franjaHoraria =
-                            franjaHorariaRepository.findById(solicitud.franjaHoraria().id()).orElse(null);
+                            franjaHorariaRepository.findById(datos.getFranjaHorariaId()).orElse(null);
                     if (aula == null || profesor == null || franjaHoraria == null) {
                         return ResponseEntity.status(404)
                                 .body(new RespuestaError("El aula, profesor o franja horaria no existe"));
                     }
+
+                    // Comprueba que la nueva franja está libre, excluyendo la reserva actual.
+                    boolean ocupada = reservaRepository
+                            .existsByAulaIdAndFechaReservaAndFranjaHorariaIdAndIdNot(
+                                    datos.getAulaId(), datos.getFechaReserva(), datos.getFranjaHorariaId(), id);
+                    if (ocupada) {
+                        return ResponseEntity.status(409)
+                                .body(new RespuestaError("El aula ya está reservada para esa fecha y franja"));
+                    }
+
                     actual.setAula(aula);
                     actual.setProfesor(profesor);
                     actual.setFranjaHoraria(franjaHoraria);
-                    actual.setFechaReserva(solicitud.fechaReserva());
+                    actual.setFechaReserva(datos.getFechaReserva());
                     return ResponseEntity.ok(reservaRepository.save(actual));
                 })
                 .orElseGet(() -> ResponseEntity.status(404)
@@ -122,20 +149,4 @@ public class ReservaController {
         return ResponseEntity.noContent().build();
     }
 
-    private record ReservaRequest(
-            Referencia aula,
-            Referencia profesor,
-            Referencia franjaHoraria,
-            LocalDate fechaReserva) {
-
-        private boolean valida() {
-            return fechaReserva != null
-                    && aula != null && aula.id() != null
-                    && profesor != null && profesor.id() != null
-                    && franjaHoraria != null && franjaHoraria.id() != null;
-        }
-    }
-
-    private record Referencia(Long id) {
-    }
 }

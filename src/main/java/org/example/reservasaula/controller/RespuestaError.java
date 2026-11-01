@@ -1,4 +1,13 @@
 package org.example.reservasaula.controller;
 
-public record RespuestaError(String mensaje) {
+public class RespuestaError {
+    private final String mensaje;
+
+    public RespuestaError(String mensaje) {
+        this.mensaje = mensaje;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
 }
